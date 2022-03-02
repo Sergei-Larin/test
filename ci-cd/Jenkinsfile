@@ -29,6 +29,12 @@ pipeline {
     }
   }
   stages {
+    stage('Preparations') {
+      steps {
+        println("=============================== STEP: Initialize parameters as environment variables due to https://issues.jenkins-ci.org/browse/JENKINS-41929 ===============================")
+        evaluate """${def script = ""; params.each { k, v -> script += "env.${k} = '''${v}'''\n" }; return script}"""
+      }
+    }
     stage('Test pylint') {
       steps {
         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {

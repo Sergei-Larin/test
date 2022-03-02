@@ -10,6 +10,11 @@ spec:
     command:
     - cat
     tty: true
+  - name: sonar
+    image: openjdk:19-jdk-alpine3.15
+    command:
+    - cat
+    tty: true
   - name: kubectl
     image: gcr.io/cloud-builders/kubectl
     command:

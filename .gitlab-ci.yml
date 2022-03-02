@@ -1,0 +1,10 @@
+services:
+  - docker:18.09.7-dind
+variables:
+  DOCKER_HOST: tcp://127.0.0.1:2375
+
+build:
+  image: docker:18.09.7
+  stage: build
+  script:
+    - docker build -t epam-23-app:$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA .

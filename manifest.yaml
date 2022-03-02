@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: testapp
+  labels:
+    app: testapp
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: testapp
+  template:
+    metadata:
+      labels:
+        app: testapp
+    spec:
+      containers:
+      - name: main
+        image: eu.gcr.io/idyllic-pottery-336614/cicd_app:__TAG__
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: testapp
+spec:
+  type: LoadBalancer
+  selector:
+    app: testapp
+  ports:
+    - protocol: TCP
+      port: 80

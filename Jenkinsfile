@@ -32,33 +32,35 @@ pipeline {
     stage('Testing') {
       steps {
         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-          container('python') {
-            println("=============================== STEP: Testing project ===============================")
-            sh 'pip3 install --upgrade pip -r requirements.txt'
-            parallel(
-              'Lint *.py Tests': {
-                sh 'pylint *.py'
-              },
-              'Lint */*.py Tests': {
-                sh 'pylint */*.py'
-              },
-              'Lint */*/*.py Tests': {
-                sh 'pylint */*/*.py'
-              },
-              'Quality Tests': {
-                  def scannerHome = tool 'sonar-scanner'    
-                  withSonarQubeEnv(credentialsId: '', installationName: 'SonarQube') {
-                    sh  "${scannerHome}/bin/sonar-scanner " +
-                      "-Dsonar.projectKey=${env.DOCKER_REGISTRY_BUILD_URL} " +
-                      "-Dsonar.projectName=${env.DOCKER_REGISTRY_BUILD_URL} " +
-                      "-Dsonar.sources=. " +
-                      "-Dsonar.coverage.dtdVerification=false " +
-                      "-Dsonar.projectVersion=${env.COMMIT} " +
-                      "-Dsonar.python.coverage.reportPaths=/sonar/coverage.xml "+
-                      "-Dsonar.python.xunit.reportPath=/sonar/result.xml "
+          script {
+            container('python') {
+              println("=============================== STEP: Testing project ===============================")
+              sh 'pip3 install --upgrade pip -r requirements.txt'
+              parallel(
+                'Lint *.py Tests': {
+                  sh 'pylint *.py'
+                },
+                'Lint */*.py Tests': {
+                  sh 'pylint */*.py'
+                },
+                'Lint */*/*.py Tests': {
+                  sh 'pylint */*/*.py'
+                },
+                'Quality Tests': {
+                    def scannerHome = tool 'sonar-scanner'    
+                    withSonarQubeEnv(credentialsId: '', installationName: 'SonarQube') {
+                      sh  "${scannerHome}/bin/sonar-scanner " +
+                        "-Dsonar.projectKey=${env.DOCKER_REGISTRY_BUILD_URL} " +
+                        "-Dsonar.projectName=${env.DOCKER_REGISTRY_BUILD_URL} " +
+                        "-Dsonar.sources=. " +
+                        "-Dsonar.coverage.dtdVerification=false " +
+                        "-Dsonar.projectVersion=${env.COMMIT} " +
+                        "-Dsonar.python.coverage.reportPaths=/sonar/coverage.xml "+
+                        "-Dsonar.python.xunit.reportPath=/sonar/result.xml "
+                    }
                   }
-                }
-            )
+              )
+            }
           }
         }
       }
@@ -66,12 +68,14 @@ pipeline {
 
     stage('Build image') {
       steps {
-        container("docker-client") {
-          println("=============================== STEP: Building project from commit: "+env.GIT_COMMIT.take(7) + " ===============================")		
-          IMAGE_NAME = get_image_name()       
-          docker.withRegistry("${DOCKER_REGISTRY}", env.DOCKER_CREDENTIAL_ID) {
-            dockerImage = docker.build("${IMAGE_NAME}","--no-cache -f Dockerfile .")
-            dockerImage.push()
+        script {
+          container("docker-client") {
+            println("=============================== STEP: Building project from commit: "+env.GIT_COMMIT.take(7) + " ===============================")		
+            IMAGE_NAME = get_image_name()       
+            docker.withRegistry("${DOCKER_REGISTRY}", env.DOCKER_CREDENTIAL_ID) {
+              dockerImage = docker.build("${IMAGE_NAME}","--no-cache -f Dockerfile .")
+              dockerImage.push()
+            }
           }
         }
       }
@@ -82,10 +86,12 @@ pipeline {
         branch 'develop' 
       }
       steps {
-        container('kubectl') {
-          withKubeConfig([credentialsId: 'k8s-sa-id', serverUrl: 'https://1F230DA16B55ADC9155FE9D2A8CBD945.gr7.eu-central-1.eks.amazonaws.com']) {
-            println("=============================== STEP: Deploy to dev ===============================")
-            sh 'kubectl --namespace=dev get po'
+        script {
+          container('kubectl') {
+            withKubeConfig([credentialsId: 'k8s-sa-id', serverUrl: 'https://1F230DA16B55ADC9155FE9D2A8CBD945.gr7.eu-central-1.eks.amazonaws.com']) {
+              println("=============================== STEP: Deploy to dev ===============================")
+              sh 'kubectl --namespace=dev get po'
+            }
           }
         }
       }
@@ -96,10 +102,12 @@ pipeline {
         return isStage 
       }
       steps {
-        container('kubectl') {
-          withKubeConfig([credentialsId: 'k8s-sa-id', serverUrl: 'https://1F230DA16B55ADC9155FE9D2A8CBD945.gr7.eu-central-1.eks.amazonaws.com']) {
-            println("=============================== STEP: Deploy to stage ===============================")
-            sh 'kubectl --namespace=stage get po'
+        script {
+          container('kubectl') {
+            withKubeConfig([credentialsId: 'k8s-sa-id', serverUrl: 'https://1F230DA16B55ADC9155FE9D2A8CBD945.gr7.eu-central-1.eks.amazonaws.com']) {
+              println("=============================== STEP: Deploy to stage ===============================")
+              sh 'kubectl --namespace=stage get po'
+            }
           }
         }
       }
@@ -110,10 +118,12 @@ pipeline {
         return env.TAG_NAME 
       }
       steps {
-        container('kubectl') {
-          withKubeConfig([credentialsId: 'k8s-sa-id', serverUrl: 'https://1F230DA16B55ADC9155FE9D2A8CBD945.gr7.eu-central-1.eks.amazonaws.com']) {
-            println("=============================== STEP: Deploy to production ===============================")
-            sh 'kubectl --namespace=prod get po'
+        script {
+          container('kubectl') {
+            withKubeConfig([credentialsId: 'k8s-sa-id', serverUrl: 'https://1F230DA16B55ADC9155FE9D2A8CBD945.gr7.eu-central-1.eks.amazonaws.com']) {
+              println("=============================== STEP: Deploy to production ===============================")
+              sh 'kubectl --namespace=prod get po'
+            }
           }
         }
       }

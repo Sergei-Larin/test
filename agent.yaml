@@ -14,7 +14,7 @@ spec:
     image: openjdk:19-jdk-alpine3.15
     command:
     - cat
-    tty: 
+    tty: true
   - name: kubectl
     image: gcr.io/cloud-builders/kubectl
     command:

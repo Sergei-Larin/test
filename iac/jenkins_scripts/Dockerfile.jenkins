@@ -1,0 +1,32 @@
+FROM jenkins/jenkins:lts
+ARG KUBCTL_VERSION
+ARG KUBCTL_ARCH
+
+USER root
+RUN apt-get update && apt-get install -y lsb-release
+
+RUN curl --silent -o- -L https://storage.googleapis.com/kubernetes-release/release/$KUBCTL_VERSION/bin/linux/$KUBCTL_ARCH/kubectl > /usr/local/bin/kubectl \
+    && chmod +x /usr/local/bin/kubectl
+
+RUN curl -fsSLo /usr/share/keyrings/docker-archive-keyring.asc \
+  https://download.docker.com/linux/debian/gpg
+
+RUN echo "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/usr/share/keyrings/docker-archive-keyring.asc] \
+  https://download.docker.com/linux/debian \
+  $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+
+RUN apt-get update && apt-get install -y docker-ce-cli
+
+# Docker permissions
+RUN addgroup -gid 1004 dockeroutside \
+    && usermod -a -G dockeroutside jenkins
+
+USER jenkins
+COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
+RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/ref/plugins.txt
+RUN echo $JENKINS_VERSION > /usr/share/jenkins/ref/jenkins.install.UpgradeWizard.state; \
+  echo $JENKINS_VERSION > /usr/share/jenkins/ref/jenkins.install.InstallUtil.lastExecVersion
+ENV CASC_JENKINS_CONFIG /var/jenkins_home/casc_configs
+RUN mkdir -p /var/jenkins_home/casc_configs
+COPY jenkins.yaml /var/jenkins_home/casc_configs/jenkins.yaml

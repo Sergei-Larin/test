@@ -1,0 +1,50 @@
+{% extends "template.html" %}
+{% block content %}
+    <div class="container has-text-centered">
+        <div class="column is-4 is-offset-4">
+            <h3 class="title">Create new account</h3>
+            <div class="box">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="notification is-danger">
+                            {% if messages[0] == "Пользователь уже существует" %}
+                                {{ messages[0] }} <br>
+                                Перейдите на страницу <a href="{{ url_for('ui.login_page') }}">Авторизации</a>
+                            {% else %}
+                                {{ messages[0] }}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <form method="post">
+                    <div class="field">
+                        <div class="control">
+                            <input class="input is-large"  type="text" name="login" placeholder="Username" autofocus="">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="control">
+                            <input class="input is-large" type="password" name="password" required placeholder="Password">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="control">
+                            <input class="input is-large" type="password" name="password_retype" required placeholder="Retype password">
+                        </div>
+                    </div>
+
+                    <input  class="button is-block is-info is-large is-fullwidth"  type="submit" value="Register">
+
+                    <div class="field">
+                        <div class="control">
+                            If you already have an account, just <a href="{{ url_for('ui.login_page') }}">Sign in</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

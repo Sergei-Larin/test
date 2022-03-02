@@ -1,0 +1,14 @@
+{% extends "template.html" %}
+{% block content %}
+        <div class="container has-text-centered">
+        {% if current_user.is_authenticated %}
+            <h1 class="title">
+                Logged as: {{ current_user.login }}!
+            </h1>
+        {% else %}
+            <h1 class="title">
+              You are not authorized!
+            </h1>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -1,0 +1,43 @@
+version: '2'
+
+services:
+  jenkins-server:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.jenkins
+      args:
+        KUBCTL_VERSION: "${KUBCTL_VERSION}"
+        KUBCTL_ARCH: "${KUBCTL_ARCH}"
+    env_file:
+      - .env_jenkins
+    image: jenkins-server:lts
+    user: root
+    restart: always
+    container_name: container-jenkins-server
+    network_mode: host
+    ports:
+      - "8080:8080"
+    environment:
+      TZ: "${TZ}"
+      DOCKER_HOST: "${DOCKER_HOST_CUSTOM}"
+    volumes:
+        - ${dir_jenkins}:/var/jenkins_home:z
+        - ${dir_jenkins}:/var/lib/jenkins:z
+        - ${dir_jenkins}:/var/opt:z
+        - /var/run/docker.sock:/var/run/docker.sock:rw
+        - ./jenkins.yaml:/var/jenkins_home/casc_configs/jenkins.yaml
+    depends_on:
+      - dind
+  dind:
+    image: docker:18.09-dind
+    restart: always
+    privileged: true
+    container_name: container-dind
+    network_mode: host
+    ports:
+      - "2375:2375"
+    environment:
+      TZ: "${TZ}"
+    volumes:
+      - ${dir_dind}:/var/lib/docker:Z
+      - ${dir_jenkins}:/var/jenkins_home:z

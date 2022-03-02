@@ -1,0 +1,146 @@
+def get_image_name(){
+    if(env.TAG_NAME){
+        image = "${env.DOCKER_REGISTRY_BUILD_URL}" + ":release"
+        isStage = false
+    } else if(env.BRANCH_NAME ==~ /release-*[0-9].[0-9].[0-9]/) {
+        image = "${env.DOCKER_REGISTRY_BUILD_URL}" + ":stage"
+        isStage = true
+    } else {
+        image = "${env.DOCKER_REGISTRY_BUILD_URL}" + ":dev"
+        isStage = false
+    }
+    return image
+}
+
+properties([
+    parameters([
+            string(name: "DOCKER_CREDENTIAL_ID", defaultValue: "ecr:eu-central-1:aws-credentials-id", description: "ECR credentials"),
+            string(name: "DOCKER_REGISTRY_BUILD_URL", defaultValue: "diploma", description: "Registry name for images"),
+            string(name: "POSTGRES_CREDENTIAL_ID", defaultValue: "postgres-id", description: "ID postgres credential"),
+    ])
+])
+
+pipeline {
+    agent any    
+    stages {
+        stage('Preparations') {
+            when { expression { env.BUILD_NUMBER == '1' } }
+            steps {
+                println("=============================== STEP: Initialize parameters as environment variables due to https://issues.jenkins-ci.org/browse/JENKINS-41929 ===============================")
+                script { params.each { k, v -> env[k] = v } }
+            }
+        }
+
+        stage('Testing'){
+            environment {
+                IMAGE_TESTING = "${env.DOCKER_REGISTRY_BUILD_URL}" + ":testing"
+                APP_NAME      = "${env.DOCKER_REGISTRY_BUILD_URL}"
+            }
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    script {
+                        println("=============================== STEP: Testing project ===============================")
+                        println("${IMAGE_TESTING}")
+                        def imageTest= docker.build(env.IMAGE_TESTING, "--no-cache -f Dockerfile.test .")
+                        parallel(
+                            'Lint *.py Tests': {
+                                imageTest.inside{
+                                    sh 'pylint *.py'
+                                }
+                            },
+                            'Lint */*.py Tests': {
+                                imageTest.inside{
+                                    sh 'pylint */*.py'
+                                }
+                            },
+                            'Lint */*/*.py Tests': {
+                                imageTest.inside{
+                                    sh 'pylint */*/*.py'
+                                }
+                            },
+                            'Quality Tests': {
+                                def scannerHome = tool 'sonar-scanner'    
+                                withSonarQubeEnv(credentialsId: 'sonar-token', installationName: 'SonarQube') {
+                                    sh  "${scannerHome}/bin/sonar-scanner " +
+                                        "-Dsonar.projectKey=${env.APP_NAME} " +
+                                        "-Dsonar.projectName=${env.APP_NAME} " +
+                                        "-Dsonar.sources=. " +
+                                        "-Dsonar.coverage.dtdVerification=false " +
+                                        "-Dsonar.projectVersion=${env.COMMIT} " +
+                                        "-Dsonar.python.coverage.reportPaths=/sonar/coverage.xml "+
+                                        "-Dsonar.python.xunit.reportPath=/sonar/result.xml "
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        stage('Build image') {
+            steps {
+                script {
+                    println("=============================== STEP: Building project from commit: "+env.GIT_COMMIT.take(7) + " ===============================")		
+                    IMAGE_NAME = get_image_name()       
+                    docker.withRegistry("${DOCKER_REGISTRY}", env.DOCKER_CREDENTIAL_ID) {
+                        dockerImage = docker.build("${IMAGE_NAME}","--no-cache -f Dockerfile .")
+                            dockerImage.push()
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to dev') {
+            when {
+                branch 'develop' 
+            }
+            steps {
+                println("=============================== STEP: Deploy to Dev ===============================")
+                    container('kubectl') {
+                        step([
+                            
+                        ])
+                    }
+                    echo 'Deploying...'
+            }
+        }
+            
+        stage('Deploy to stage') {
+            when {
+                expression {    
+                    return isStage	
+                }
+            }
+            steps {
+                println("=============================== STEP: Deploy to Stage ===============================")
+                echo 'Deploying...'
+            }
+        }
+        
+        stage('Deploy to prod') {
+            when {
+                expression {
+                   return env.TAG_NAME;
+                }
+            }
+            steps {
+                println("=============================== STEP: Deploy to production ===============================")
+                echo 'Deploying...'
+            }
+        }
+    }
+
+    post {
+        always { 
+                cleanWs() 
+                script {
+                    println("=============================== AFTERSTEPS: Cleanup ===============================")
+                    def IMAGE_NAME = get_image_name()
+                    sh "docker rmi $IMAGE_NAME $IMAGE_TESTING -f"
+                    sh "docker image prune -f"    
+                }
+        }
+        success { echo 'I succeeeded' }
+        failure { echo 'I failed' }
+    }
+}

@@ -7,9 +7,3 @@ COPY requirements.txt /app
 RUN pip3 install --upgrade pip -r requirements.txt
 #Copy project files in docker image
 COPY . /app
-#set up applicaion port
-EXPOSE 5000
-#set entrypoint
-ENTRYPOINT [ "python" ]
-#run application
-CMD [ "start.py" ]

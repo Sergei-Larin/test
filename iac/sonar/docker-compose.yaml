@@ -1,0 +1,37 @@
+version: "2"
+
+services:
+  sonarqube:
+    image: sonarqube
+    privileged: true
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "9000:9000"
+    networks:
+      - sonarnet
+    environment:
+      SONAR_JDBC_URL: "${DATABASE_JDBC}"
+      SONAR_JDBC_USERNAME: "${DATABASE_USER}"
+      SONAR_JDBC_PASSWORD: "${DATABASE_PASSWORD}"
+    volumes:
+      - ${DIR_DATA_SONAR}:/opt/sonarqube/data
+      - ${DIR_EXTENSIONS_SONAR}:/opt/sonarqube/extensions
+      - ${DIR_LOGS_SONAR}:/opt/sonarqube/logs
+      - ${DIR_TEMP_SONAR}:/opt/sonarqube/temp
+  db:
+    image: postgres
+    restart: always
+    networks:
+      - sonarnet
+    environment:
+      POSTGRES_USER: "${DATABASE_USER}"
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
+    volumes:
+      - ${DIR_PG}:/var/lib/postgresql
+      - ${DIR_PG_DATA}:/var/lib/postgresql/data
+
+networks:
+  sonarnet:
+    driver: bridge

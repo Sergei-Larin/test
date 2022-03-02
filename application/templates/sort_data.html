@@ -1,0 +1,72 @@
+{% extends "template.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="container">
+        <div class ="control">
+            <div class="container has-text-centered">
+                <div class="column is-4 is-offset-4">
+                    <div class="box">
+                        <h3 class="title is-4">Filter</h3>
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                <div class="notification is-success">
+                                    {{ messages[0] }}
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                        <form action="" method="POST">
+                            <div class="field has-addons">
+                                <div class="control is-expanded">
+                                    <input class="input"  type="text" name="release_year" placeholder="Year of release" autofocus="">
+                                </div>
+                                <div class="control">
+                                    <button type="submit" class="button is-info " id="btnFiltr">Search</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if data_all %}
+    <div class="container">
+        <div class="control">
+            <div class="box">
+                <table class="table table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+                    <thead>
+                        <th>KIND</th>
+                        <th>COLLECTION NAME</th>
+                        <th>TRACK NAME</th>
+                        <th>COLLECTION PRICE</th>
+                        <th>TRACK PRICE</th>
+                        <th>PRIMARY GENRE NAME</th>
+                        <th>TRACK COUNT</th>
+                        <th>TRACK NUMBER</th>
+                        <th>RELEASE DATA</th>
+                        <th>LAST UPDATE</th>
+                    </thead>
+                    <tbody>
+                        {% for data in data_all %}
+                        <tr>
+                            <td>{{ data.kind }}</td>
+                            <td>{{ data.collection_name }}</td>
+                            <td>{{ data.track_name }}</td>
+                            <td>{{ data.collection_price }}</td>
+                            <td>{{ data.track_price }}</td>
+                            <td>{{ data.primary_genre_name }}</td>
+                            <td>{{ data.track_count }}</td>
+                            <td>{{ data.track_number }}</td>
+                            <td>{{ data.release_date }}</td>
+                            <td>{{ data.created_on }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

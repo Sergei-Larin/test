@@ -1,0 +1,171 @@
+credentials:
+  system:
+    domainCredentials:
+    - credentials:
+      - string:
+          description: "SonarQube Token"
+          id: "sonar-token"
+          scope: GLOBAL
+          secret: ${SONAR_TOKEN}
+      - usernamePassword:
+          id: "postgres-id"
+          password: ${POSTGRES_ID}
+          scope: GLOBAL
+          username: "postgres"
+      - aws:
+          accessKey: ${AWS_ID}
+          id: "aws-credentials-id"
+          scope: GLOBAL
+          secretKey: ${AWS_SECRET_KEY}
+      - usernamePassword:
+          description: "Access to GitHub by token"
+          id: "github-token-id"
+          password: ${GITHUB_TOKEN_ID}
+          scope: GLOBAL
+          username: "jenkins-user"
+      - string:
+          description: "kubernetes Token"
+          id: "k8s-sa-id"
+          scope: GLOBAL
+          secret: ${K8S_TOKEN_ID}
+jenkins:
+  agentProtocols:
+  - "JNLP4-connect"
+  - "Ping"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  clouds:
+  - kubernetes:
+      containerCap: 10
+      containerCapStr: "10"
+      credentialsId: "k8s-sa-id"
+      name: "kubernetes"
+      namespace: "default"
+      serverCertificate: ${K8S_CERT}
+      serverUrl: ${K8S_URL}
+      skipTlsVerify: true
+  crumbIssuer:
+    standard:
+      excludeClientIPFromCrumb: false
+  disableRememberMe: false
+  globalNodeProperties:
+  - envVars:
+      env:
+      - key: "DOCKER_REGISTRY"
+        value: ${DOCKER_REGISTRY}
+      - key: "PG_SERVER"
+        value: ${PG_SERVER}
+  labelAtoms:
+  - name: "built-in"
+  markupFormatter: "plainText"
+  mode: NORMAL
+  myViewsTabBar: "standard"
+  numExecutors: 2
+  primaryView:
+    all:
+      name: "all"
+  projectNamingStrategy: "standard"
+  quietPeriod: 5
+  remotingSecurity:
+    enabled: true
+  scmCheckoutRetryCount: 0
+  securityRealm:
+    local:
+      allowsSignup: false
+      enableCaptcha: false
+      users:
+      - id: ${JENKINS_ADMIN_ID}
+        password: ${JENKINS_ADMIN_PASSWORD}
+        name: "Main administrator"
+        properties:
+        - "apiToken"
+        - favoriting:
+            autofavoriteEnabled: true
+        - mailer:
+            emailAddress: "admin@admin.ru"
+        - "favorite"
+        - preferredProvider:
+            providerId: "default"
+  slaveAgentPort: 50000
+  updateCenter:
+    sites:
+    - id: "default"
+      url: "https://updates.jenkins.io/update-center.json"
+  views:
+  - all:
+      name: "all"
+  viewsTabBar: "standard"
+globalCredentialsConfiguration:
+  configuration:
+    providerFilter: "none"
+    typeFilter: "none"
+security:
+  apiToken:
+    creationOfLegacyTokenEnabled: false
+    tokenGenerationOnCreationEnabled: false
+    usageStatisticsEnabled: true
+  sSHD:
+    port: -1
+unclassified:
+  bitbucketEndpointConfiguration:
+    endpoints:
+    - bitbucketCloudEndpoint:
+        enableCache: false
+        manageHooks: false
+        repositoriesCacheDuration: 0
+        teamCacheDuration: 0
+  buildDiscarders:
+    configuredBuildDiscarders:
+    - "jobBuildDiscarder"
+  fingerprints:
+    fingerprintCleanupDisabled: false
+    storage: "file"
+  gitHubConfiguration:
+    apiRateLimitChecker: ThrottleForNormalize
+  gitHubPluginConfig:
+    hookUrl: ${GIT_HUB_WEBHOOK}
+  gitSCM:
+    addGitTagAction: false
+    allowSecondFetch: false
+    createAccountBasedOnEmail: false
+    disableGitToolChooser: false
+    hideCredentials: false
+    showEntireCommitSummaryInChanges: false
+    useExistingAccountWithSameEmail: false
+  junitTestResultStorage:
+    storage: "file"
+  location:
+    adminAddress: "адрес еще не настроен <nobody@nowhere>"
+    url: ${JENKINS_URL}
+  mailer:
+    charset: "UTF-8"
+    useSsl: false
+    useTls: false
+  pollSCM:
+    pollingThreadCount: 10
+  sonarGlobalConfiguration:
+    buildWrapperEnabled: true
+    installations:
+    - credentialsId: "sonar-token"
+      name: "SonarQube"
+      serverUrl: ${SONAR_SERVER}
+      triggers:
+        skipScmCause: false
+        skipUpstreamCause: false
+tool:
+  git:
+    installations:
+    - home: "git"
+      name: "Default"
+  mavenGlobalConfig:
+    globalSettingsProvider: "standard"
+    settingsProvider: "standard"
+  sonarRunnerInstallation:
+    installations:
+    - name: "sonar-scanner"
+      properties:
+      - installSource:
+          installers:
+          - sonarRunnerInstaller:
+              id: "4.6.2.2472"

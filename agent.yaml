@@ -37,4 +37,4 @@ spec:
     - name: cache
       hostPath:
         path: /tmp
-	type: Directory
+        type: Directory

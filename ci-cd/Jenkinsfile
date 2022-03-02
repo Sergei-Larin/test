@@ -29,7 +29,7 @@ pipeline {
     }
   }
   stages {
-    stage('Testing') {
+    stage('Testing pylint') {
       steps {
         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
           script {
@@ -45,21 +45,31 @@ pipeline {
                 },
                 'Lint */*/*.py Tests': {
                   sh 'pylint */*/*.py'
-                },
-                'Quality Tests': {
-                    def scannerHome = tool 'sonar-scanner'    
-                    withSonarQubeEnv(credentialsId: '', installationName: 'SonarQube') {
-                      sh  "${scannerHome}/bin/sonar-scanner " +
-                        "-Dsonar.projectKey=${env.DOCKER_REGISTRY_BUILD_URL} " +
-                        "-Dsonar.projectName=${env.DOCKER_REGISTRY_BUILD_URL} " +
-                        "-Dsonar.sources=. " +
-                        "-Dsonar.coverage.dtdVerification=false " +
-                        "-Dsonar.projectVersion=${env.COMMIT} " +
-                        "-Dsonar.python.coverage.reportPaths=/sonar/coverage.xml "+
-                        "-Dsonar.python.xunit.reportPath=/sonar/result.xml "
-                    }
-                  }
+                }
               )
+            }
+          }
+        }
+      }
+    }
+        
+    stage('Testing SonarQube') {
+      steps {
+        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+          script {
+            container('sonar') {
+              println("=============================== STEP: SonarQube tests ===============================")
+              def scannerHome = tool 'sonar-scanner'    
+              withSonarQubeEnv(credentialsId: '', installationName: 'SonarQube') {
+                sh  "${scannerHome}/bin/sonar-scanner " +
+                  "-Dsonar.projectKey=${env.DOCKER_REGISTRY_BUILD_URL} " +
+                  "-Dsonar.projectName=${env.DOCKER_REGISTRY_BUILD_URL} " +
+                  "-Dsonar.sources=. " +
+                  "-Dsonar.coverage.dtdVerification=false " +
+                  "-Dsonar.projectVersion=${env.COMMIT} " +
+                  "-Dsonar.python.coverage.reportPaths=/sonar/coverage.xml "+
+                  "-Dsonar.python.xunit.reportPath=/sonar/result.xml "
+              }
             }
           }
         }

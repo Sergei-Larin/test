@@ -132,19 +132,19 @@ pipeline {
         }
       }
     }
-
-    post {
-      always { 
-        cleanWs() 
-        script {
-          println("=============================== AFTERSTEPS: Cleanup ===============================")
-          def IMAGE_NAME = get_image_name()
-          sh "docker rmi $IMAGE_NAME $IMAGE_TESTING -f"
-          sh "docker image prune -f"    
-        }
+  }
+  
+  post {
+    always { 
+    cleanWs() 
+      script {
+        println("=============================== AFTERSTEPS: Cleanup ===============================")
+        def IMAGE_NAME = get_image_name()
+        sh "docker rmi $IMAGE_NAME $IMAGE_TESTING -f"
+        sh "docker image prune -f"    
       }
-      success { echo 'I succeeeded' }
-      failure { echo 'I failed' }
     }
+    success { echo 'I succeeeded' }
+    failure { echo 'I failed' }
   }
 }

@@ -99,7 +99,9 @@ pipeline {
 
     stage('Deploy to stage') {
       when {
-        return isStage 
+        expression { 
+          return isStage 
+        }
       }
       steps {
         script {
@@ -115,7 +117,9 @@ pipeline {
 
     stage('Deploy to prod') {
       when {
-        return env.TAG_NAME 
+        expression {
+          return env.TAG_NAME 
+        }
       }
       steps {
         script {

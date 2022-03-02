@@ -1,0 +1,67 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: application
+data:
+  app_settings: "application.config.DevelopmentConfig"
+  dev_database_url: "postgresql://masterdb:aIlQJfkb6##p@pgsql.crwa76cj4gbt.eu-central-1.rds.amazonaws.com/diploma"
+  secret_key: "3cbb07a09a53423eadc598d6adf90fb7"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+        namespace: development
+    spec:
+      containers:
+      - name: web
+        image: 678252477942.dkr.ecr.eu-central-1.amazonaws.com/diploma:dev
+        env:
+        - name: APP_SETTINGS
+          valueFrom: 
+            configMapKeyRef:
+              name: application
+              key: app_settings
+        - name: DEV_DATABASE_URL
+          valueFrom: 
+            configMapKeyRef:
+              name: application
+              key: dev_database_url
+        - name: SECRET_KEY
+          valueFrom: 
+            configMapKeyRef:
+              name: application
+              key: secret_key
+        ports:
+          - containerPort: 5000
+            name: http
+            protocol: TCP
+        resources:
+          requests:
+            cpu: 400m
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lb-app
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "240"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
+spec:
+  type: LoadBalancer
+  selector:
+    app: web
+  ports:
+    - port: 80
+      targetPort: 5000

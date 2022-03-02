@@ -26,18 +26,18 @@ def insert_data_from_api(search):
             total_count += record_count
             record_offset = int(record_offset) + max_offset
 
-            dict_list = [
-                'kind',
-                'b',
-                'c',
-                'd',
-            ]
-            out = list()
-            for el in dict_list:
-                data = record.get("kind", '')
-                if not data: 
-                    continue
-                out.append(data)
+    #        dict_list = [
+    #            'kind',
+    #            'b',
+    #            'c',
+    #            'd',
+    #        ]
+    #        out = list()
+    #        for el in dict_list:
+    #            data = record.get("kind", '')
+    #            if not data: 
+    #                continue
+    #            out.append(data)
 
 
             for record in response["results"]:

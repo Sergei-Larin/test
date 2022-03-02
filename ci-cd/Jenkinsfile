@@ -35,7 +35,7 @@ pipeline {
           script {
             container('python') {
               println("=============================== STEP: Testing project ===============================")
-              sh 'pip3 install --upgrade pip -r requirements.txt'
+              sh 'pip3 install --upgrade pip install pylint==2.12.2'
               parallel(
                 'Lint *.py Tests': {
                   sh 'pylint *.py'
